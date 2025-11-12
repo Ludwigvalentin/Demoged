@@ -10,24 +10,29 @@
   <body id="top">
 
     <header>
-      <div class="search-bar">
-        <input type="text" id="search-input" placeholder="Søg efter spil..." />
-       
-      </div>
-      <h1><a href="#top" class="skip-to-top"><img src="img/Skærmbillede 2025-11-04 kl. 10.19.27 37.png" alt="spilcafeenlogo"></a></h1>
-       <a href="favoritter.html" class = "favoritterknap"><img src="img/fyldthjerte.png" alt="fyldt hjerte"> </a>
-      <p> </p>
+      <h1><a href="#top" class="skip-to-top"><img src="img/logo.webp" alt="spilcafeenlogo"></a></h1>
+      
+      <nav class="main-nav">
+        <a href="#reservér">Reservér Bord</a>
+        <a href="#membership">Membership</a>
+        <a href="#menu">Menu</a>
+        <a href="#spilguide">Spilguide</a>
+        <div class="nav-group">
+          <a href="#spiloversigt" class="active-page">Spiloversigt</a>
+          <a href="#english" class="sub-link">In English</a>
+        </div>
+      </nav>
+      
+      <a href="favoritter.html" class="favoritterknap"><img src="img/fyldthjerte.png" alt="fyldt hjerte"></a>
     </header>
 
     <main>
-        
-
-        <!-- Filter bar til at søge efter specifik spil -->
-    
-      <div class="filter-controls">
-        <!-- Toggle-knap til filtre -->
+      <!-- Søgefelt og filter knap -->
+      <div class="filter-search-container">
         <button id="toggle-filters" aria-expanded="false" aria-controls="filters-panel" class="filters-toggle">Vis filtre ▾</button>
-        
+        <div class="search-bar-main">
+          <input type="text" id="search-input" placeholder="Søg efter spil..." />
+        </div>
         <button id="clear-filters" class="clear-btn">🗑️ Ryd alle filtre</button>
       </div>
       
@@ -76,11 +81,20 @@
           <button type="button" class="clear-filter" data-target="#age" aria-label="Ryd alder">✕</button>
         </div>
         
-        <button id="search-btn" type="button" aria-label="Søg">Søg</button>
+        
       </div>
 
-            
-
+      <!-- Top 10 Karrusel -->
+      <section class="top10-section">
+        <h2>Top 10</h2>
+        <div class="carousel-container">
+          <div class="carousel-wrapper">
+            <div class="carousel-track" id="top10-carousel">
+              <!-- Spil vil blive indsat her dynamisk -->
+            </div>
+          </div>
+        </div>
+      </section>
 
        <!-- Spil grid -->
       <section id="spil-list" class="spil-grid">

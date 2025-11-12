@@ -114,12 +114,184 @@ async function getSpil() {
    populateDifficultySelect();
    populateAgeSelect();
 
+   // Opret Top 10 karrusel
+   createTop10Carousel();
 
    // Vis alt ved start
    displaySpil(allSpil);
  } catch (err) {
    console.error("Fejl i getSpil:", err);
  }
+}
+
+/* ---------- Top 10 Carousel ---------- */
+
+function createTop10Carousel() {
+  const container = document.querySelector("#top10-carousel");
+  if (!container) return;
+  
+  // Tag de 10 bedst ratede spil
+  const top10 = [...allSpil]
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 10);
+  
+  // Render hvert spil i karrusellen
+  for (const spil of top10) {
+    renderCarouselCard(spil, container);
+  }
+  
+  // Duplikér kortene for seamless loop
+  for (const spil of top10) {
+    renderCarouselCard(spil, container);
+  }
+  
+  // Initialiser karrusel-funktionalitet
+  initCarousel();
+}
+
+function renderCarouselCard(spil, container) {
+  const image = spil.image || spil.image_url || "";
+  const title = spil.title || spil.name || "Untitled";
+  const rating = spil.rating ?? "N/A";
+
+  let players = "-";
+  if (spil.players) {
+    if (
+      typeof spil.players === "object" &&
+      spil.players.min &&
+      spil.players.max
+    ) {
+      players = `${spil.players.min}-${spil.players.max}`;
+    } else if (
+      typeof spil.players === "string" ||
+      typeof spil.players === "number"
+    ) {
+      players = String(spil.players);
+    }
+  }
+
+  const liked = isFavorite(spil); // ← genbrug favorit-funktionalitet
+  const heartSrc = liked ? "img/fyldthjerte.png" : "img/tomthjerte.svg";
+  const location = spil.location;
+  const shelf = spil.shelf ?? "-";
+  const available = spil.available ? "✅ Tilgængelig" : "❌ Udlånt";
+
+  const html = `
+   <article class="spil-card carousel-card" tabindex="0">
+     <img src="${heartSrc}" alt="Favorit" class="heart-icon">
+     <img src="${escapeHtml(
+       image
+     )}" class="spil-poster" alt="Poster ${escapeHtml(title)}">
+     <div class="spil-info">
+       <div class="title-rating-container">
+         <h3>${escapeHtml(title)}</h3>
+         <span class="spil-rating"><img src="img/stjerne.svg" alt="rating" class="rating-star">${escapeHtml(
+    rating
+  )}</span>
+       </div>
+        <p><strong>Lokation:</strong> ${escapeHtml(location)}</p>
+        <p><strong>Hylde:</strong> ${escapeHtml(shelf)}</p>
+        <p><strong>Status:</strong> ${available}</p>
+     </div>
+   </article>
+ `;
+
+  container.insertAdjacentHTML("beforeend", html);
+  const el = container.lastElementChild;
+
+  if (el) {
+    // Gør hele kortet klikbart for at åbne modal
+    el.addEventListener("click", (e) => {
+      // Ignorer klik på hjerte-ikonet
+      if (!e.target.closest(".heart-icon")) {
+        showSpilModal(spil);
+      }
+    });
+
+    // Gør hjertet klikbart — samme logik som ved normale spil-cards
+    const heart = el.querySelector(".heart-icon");
+    if (heart) {
+      heart.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const favs = getFavorites();
+        const alreadyFav = isFavorite(spil);
+
+        if (alreadyFav) {
+          const newFavs = favs.filter((f) => f.title !== spil.title);
+          saveFavorites(newFavs);
+          heart.src = "img/tomthjerte.svg";
+        } else {
+          favs.push(spil);
+          saveFavorites(favs);
+          heart.src = "img/fyldthjerte.png";
+        }
+      });
+    }
+  }
+}
+
+
+// Smooth auto-scroll for karrusel - forbedret version
+function initCarousel() {
+  const wrapper = document.querySelector(".carousel-wrapper");
+  if (!wrapper) {
+    console.log("Carousel wrapper not found!");
+    return;
+  }
+  
+  console.log("Initializing carousel auto-scroll...");
+  console.log("Total scrollWidth:", wrapper.scrollWidth);
+  
+  const scrollSpeed = 1;
+  let scrollInterval = null;
+  let currentScroll = 0;
+  
+  function startScrolling() {
+    if (scrollInterval) return;
+    
+    scrollInterval = setInterval(() => {
+      currentScroll += scrollSpeed;
+      
+      // Beregn halvvejs punkt (hvor duplikerede kort starter)
+      const totalWidth = wrapper.scrollWidth;
+      const halfWidth = totalWidth / 2;
+      
+      // Hvis vi når halvvejs, reset smooth
+      if (currentScroll >= halfWidth - wrapper.clientWidth) {
+        currentScroll = 0;
+      }
+      
+      wrapper.scrollLeft = currentScroll;
+      
+      console.log("Scrolling:", currentScroll, "/ Half:", halfWidth);
+    }, 30);
+    
+    console.log("Auto-scroll started");
+  }
+  
+  function stopScrolling() {
+    if (scrollInterval) {
+      clearInterval(scrollInterval);
+      scrollInterval = null;
+      currentScroll = wrapper.scrollLeft; // Gem positionen
+      console.log("Auto-scroll stopped at:", currentScroll);
+    }
+  }
+  
+  // Start auto-scroll når siden loader
+  setTimeout(startScrolling, 500); // Lille delay for at sikre DOM er klar
+  
+  // Stop ved hover/touch
+  wrapper.addEventListener('mouseenter', stopScrolling);
+  wrapper.addEventListener('touchstart', stopScrolling, { passive: true });
+  
+  // Genstart når hover/touch stopper
+  wrapper.addEventListener('mouseleave', startScrolling);
+  wrapper.addEventListener('touchend', () => {
+    setTimeout(startScrolling, 500);
+  }, { passive: true });
+  
+  console.log("Carousel auto-scroll initialized!");
 }
 
 
@@ -308,6 +480,20 @@ function filterSpil() {
    document.querySelector("#difficulty-select")?.value || "all";
  const ageValue = document.querySelector("#age")?.value || "all";
 
+ // Tjek om der er aktive filtre
+ const hasActiveFilters = q !== "" || 
+   genreValue !== "all" || 
+   playersValue !== "all" || 
+   playtimeValue !== "all" || 
+   locationValue !== "all" || 
+   difficultyValue !== "all" || 
+   ageValue !== "all";
+
+ // Skjul/vis Top 10 baseret på om der er aktive filtre
+ const top10Section = document.querySelector(".top10-section");
+ if (top10Section) {
+   top10Section.style.display = hasActiveFilters ? "none" : "block";
+ }
 
  const result = allSpil.filter((s) => {
    if (q) {
@@ -423,7 +609,19 @@ function renderSpilCard(spil, container) {
  const title = spil.title || spil.name || "Untitled";
  const rating = spil.rating ?? "N/A";
  const playtime = spil.playtime ?? spil.duration ?? "-";
- const players = spil.players ?? spil.minPlayers ?? "-";
+ 
+ // Håndter players som objekt eller værdi
+ let players = "-";
+ if (typeof spil.players === "object" && spil.players !== null) {
+   if (spil.players.min && spil.players.max) {
+     players = `${spil.players.min}-${spil.players.max}`;
+   }
+ } else if (spil.players) {
+   players = spil.players;
+ } else if (spil.minPlayers) {
+   players = spil.minPlayers;
+ }
+ 
  const genreLabel = Array.isArray(spil.genre)
    ? spil.genre.join(", ")
    : spil.genre
@@ -434,6 +632,9 @@ function renderSpilCard(spil, container) {
 
  const liked = isFavorite(spil);
 
+ const location = spil.location;
+ const shelf = spil.shelf ?? "-";
+ const available = spil.available ? "✅ Tilgængelig" : "❌ Udlånt";
 
  const html = `
    <article class="spil-card" tabindex="0">
@@ -444,12 +645,15 @@ function renderSpilCard(spil, container) {
           class="spil-poster"
           alt="Poster ${escapeHtml(title)}">
      <div class="spil-info">
-       <h3>${escapeHtml(title)} <span class="spil-rating">(${escapeHtml(
+       <div class="title-rating-container">
+         <h3>${escapeHtml(title)}</h3>
+         <span class="spil-rating"><img src="img/stjerne.svg" alt="rating" class="rating-star">${escapeHtml(
    rating
- )})</span></h3>
-       <p><strong>Genre:</strong> ${escapeHtml(genreLabel)}</p>
-       <p><strong>Spilletid:</strong> ${escapeHtml(playtime)}</p>
-       <p><strong>Spillere:</strong> ${escapeHtml(players)}</p>
+ )}</span>
+       </div>
+ <p><strong>Lokation:</strong> ${escapeHtml(location)}</p>
+       <p><strong>Hylde:</strong> ${escapeHtml(shelf)}</p>
+       <p><strong>Status:</strong> ${available}</p>
        <p class="description">${escapeHtml(desc)}</p>
        <button class="details-btn" type="button">Læs mere</button>
      </div>
@@ -457,13 +661,14 @@ function renderSpilCard(spil, container) {
  `;
 
 
+ 
  container.insertAdjacentHTML("beforeend", html);
  const el = container.lastElementChild;
 
 
  if (el) el.addEventListener("click", () => showSpilModal(spil));
 
-
+ 
  const heart = el.querySelector(".heart-icon");
  if (heart) {
    heart.addEventListener("click", (e) => {
@@ -503,6 +708,7 @@ function showSpilModal(spil) {
  const dialog = document.querySelector("#spil-dialog");
  const content = document.querySelector("#dialog-content");
  if (!dialog || !content) return;
+ 
  const imageHtml = spil.image
    ? `<img src="${escapeHtml(spil.image)}" class="spil-poster">`
    : "";
@@ -511,12 +717,63 @@ function showSpilModal(spil) {
    : spil.genre
    ? String(spil.genre)
    : "-";
+ 
+ // Håndter players objekt
+ let playersText = "-";
+ if (spil.players) {
+   if (typeof spil.players === "object" && spil.players.min && spil.players.max) {
+     playersText = `${spil.players.min}-${spil.players.max} spillere`;
+   } else if (typeof spil.players === "string" || typeof spil.players === "number") {
+     playersText = `${spil.players} spillere`;
+   }
+ }
+ 
+ const rating = spil.rating ? `⭐ ${spil.rating}/5` : "Ingen rating";
+ const playtime = spil.playtime ? `${spil.playtime} min` : "-";
+ const age = spil.age ? `${spil.age}+` : "-";
+ const difficulty = spil.difficulty ?? "-";
+ const language = spil.language ?? "-";
+ 
+ // Fang lokation fra JSON
+ const location = spil.location || 
+                  spil.store || 
+                  spil.place || 
+                  (spil.library && spil.library.location) || 
+                  "Ukendt lokation";
+ 
+ console.log("Location for", spil.title, ":", location, "Raw:", spil.location);
+ 
+ const shelf = spil.shelf ?? "-";
+ const available = spil.available ? "✅ Tilgængelig" : "❌ Udlånt";
+ const rules = spil.rules ?? "";
+ 
  content.innerHTML = `
-   ${imageHtml}
-   <div class="dialog-details">
+   <div class="dialog-left">
      <h2>${escapeHtml(spil.title ?? spil.name ?? "Untitled")}</h2>
-     <p><strong>Genre:</strong> ${escapeHtml(genreText)}</p>
-     <p>${escapeHtml(spil.description ?? "")}</p>
+     <p class="rating">${rating}</p>
+     <p><strong>📝 Beskrivelse:</strong><br>${escapeHtml(spil.description ?? "Ingen beskrivelse tilgængelig")}</p>
+     
+     <div class="info-grid">
+       <p><strong>🎭 Genre:</strong> ${escapeHtml(genreText)}</p>
+       <p><strong>👥 Spillere:</strong> ${escapeHtml(playersText)}</p>
+       <p><strong>⏱️ Spilletid:</strong> ${escapeHtml(playtime)}</p>
+       <p><strong>🎯 Sværhedsgrad:</strong> ${escapeHtml(difficulty)}</p>
+       <p><strong>👶 Alder:</strong> ${escapeHtml(age)}</p>
+       <p><strong>🌍 Sprog:</strong> ${escapeHtml(language)}</p>
+       <p><strong>📍 Lokation:</strong> ${escapeHtml(location)}</p>
+       <p><strong>📚 Hylde:</strong> ${escapeHtml(shelf)}</p>
+       <p><strong>Status:</strong> ${available}</p>
+     </div>
+   </div>
+   
+   <div class="dialog-right">
+     ${imageHtml}
+     ${rules ? `
+       <div class="rules-section">
+         <p><strong>📖 Regler:</strong></p>
+         <p class="rules-text">${escapeHtml(rules)}</p>
+       </div>
+     ` : ''}
    </div>
  `;
  const closeBtn = dialog.querySelector("#close-dialog");
