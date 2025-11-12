@@ -1,62 +1,123 @@
 <!DOCTYPE html>
 <html lang="da">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Ludwigs burgere</title>
-  <link rel="stylesheet" href="css/css.css">
-</head>
-<body>
-  <!-- Header med herobillede-->
-   <header>
-    <h1> Bjarnes burgere </h1>
-    
-    </h1>
-   </header>
-  <main>
-   <!--her kommer "call to action" (de skal ringe)-->
-   <section id="CTA">
-    <h2> bestil din burger nu!</h2>
-    <aside>
-      Åben hver dag fra 11.00 - 23.00
-    </aside>
-    <aside>
-      <a href="tell:004512345678"> 
-        mob. +45 1234 5678
-      </a>
-    </aside>
-   </section>
-<!--- den fede stemning i "bjarnes burgerbar"-->
-<section id="stemning" class="flex">
-<!--her er bjarne-->
-<article>
-  <img src="images/bjarne.png" 
-  alt="Her er et billede af bjarne i burgerbaren">
-  <h2> bjarne bentsen</h2>
-  <p> her er bjarne i burgerbaren i gang med at lave burgere</p>
-</article>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spilcafeen spiloversigt app</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<!--her er de glade kunder.-->
-<article>
-  <img src="images/gladeKunder.png" 
-  alt="Her er de glade kunder">
-  <h2> bjarne bentsen</h2>
-  <p> her får du de bedste burgere</p>
-</article>
-<!--her er den nuttede kat og onde mus-->
-<article>
-  <img src="images/katOgMus.png" 
-  alt="Her er et billede af to glade kunder">
-  <h2> katten bodil og musen bent</h2>
-  <p> Mus og kat spiser burger</p>
-</article>
-</section>
-  </main>
+  <body id="top">
 
-  <footer>
-    &copy; Per Jensen, 2025
-  </footer>
-  <script src="js/js.js"></script>
-</body>
+    <header>
+      <h1><a href="#top" class="skip-to-top"><img src="img/logo.webp" alt="spilcafeenlogo"></a></h1>
+      
+      <nav class="main-nav">
+        <a href="#reservér">Reservér Bord</a>
+        <a href="#membership">Membership</a>
+        <a href="#menu">Menu</a>
+        <a href="#spilguide">Spilguide</a>
+        <div class="nav-group">
+          <a href="#spiloversigt" class="active-page">Spiloversigt</a>
+          <a href="#english" class="sub-link">In English</a>
+        </div>
+      </nav>
+      
+      <a href="favoritter.html" class="favoritterknap"><img src="img/fyldthjerte.png" alt="fyldt hjerte"></a>
+    </header>
+
+    <main>
+      <!-- Søgefelt og filter knap -->
+      <div class="filter-search-container">
+        <button id="toggle-filters" aria-expanded="false" aria-controls="filters-panel" class="filters-toggle">Vis filtre ▾</button>
+        <div class="search-bar-main">
+          <input type="text" id="search-input" placeholder="Søg efter spil..." />
+        </div>
+      </div>
+      
+       <!-- Filter-panelet (start skjult) -->
+      <div id="filters-panel" class="filterbar collapsed" aria-hidden="true">
+        
+        <div class="filter-item">
+          <select id="genre-select">
+            <option value="all">Alle genrer</option>
+          </select>
+          <button type="button" class="clear-filter" data-target="#genre-select" aria-label="Ryd genre">✕</button>
+        </div>
+      
+        <div class="filter-item">
+          <select id="players-select">
+            <option value="all">Antal spillere</option>
+          </select>
+          <button type="button" class="clear-filter" data-target="#players-select" aria-label="Ryd antal spillere">✕</button>
+        </div>
+
+        <div class="filter-item">
+          <select id="playtime-select">
+            <option value="all">Spilletid</option>
+          </select>
+          <button type="button" class="clear-filter" data-target="#playtime-select" aria-label="Ryd spilletid">✕</button>
+        </div>
+
+        <div class="filter-item">
+          <select id="location-select">
+            <option value="all">Lokation</option>
+          </select>
+          <button type="button" class="clear-filter" data-target="#location-select" aria-label="Ryd lokation">✕</button>
+        </div>
+
+        <div class="filter-item">
+          <select id="difficulty-select">
+            <option value="all">Sværhedsgrad</option>
+          </select>
+          <button type="button" class="clear-filter" data-target="#difficulty-select" aria-label="Ryd sværhedsgrad">✕</button>
+        </div>
+
+        <div class="filter-item">
+          <select id="age">
+            <option value="all">Alder</option>
+          </select>
+          <button type="button" class="clear-filter" data-target="#age" aria-label="Ryd alder">✕</button>
+        </div>
+        
+        <button id="search-btn" type="button" aria-label="Søg">Søg</button>
+        
+        <button id="clear-filters" class="clear-btn">🗑️ Ryd alle filtre</button>
+      </div>
+
+      <!-- Top 10 Karrusel -->
+      <section class="top10-section">
+        <h2>Top 10</h2>
+        <div class="carousel-container">
+          <div class="carousel-wrapper">
+            <div class="carousel-track" id="top10-carousel">
+              <!-- Spil vil blive indsat her dynamisk -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+       <!-- Spil grid -->
+      <section id="spil-list" class="spil-grid">
+        <!-- Spil vil blive indsat her dynamisk -->
+      </section>
+
+    </main>
+
+    <footer>
+      
+     
+    </footer>
+ <!-- SPIL Detail Modal -->
+    <dialog id="spil-dialog">
+      <form method="dialog">
+        <button id="close-dialog" aria-label="Close">✕</button>
+        <div id="dialog-content">
+          <!-- Spil details will be injected here via JavaScript -->
+        </div>
+      </form>
+    </dialog>
+    <script src="js/app.js"></script>
+
+    </body>
 </html>
